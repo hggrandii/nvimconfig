@@ -13,6 +13,7 @@ return {
 				"rust",
 				"jsdoc",
 				"bash",
+				"python",
 			},
 
 			-- Install parsers synchronously (only applied to `ensure_installed`)
