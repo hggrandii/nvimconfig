@@ -12,6 +12,9 @@ return {
 		"saadparwaiz1/cmp_luasnip",
 		"j-hui/fidget.nvim",
 		"folke/trouble.nvim",
+		"akinsho/flutter-tools.nvim",
+		"nvim-lua/plenary.nvim",
+		"stevearc/dressing.nvim",
 	},
 
 	config = function()
@@ -37,7 +40,7 @@ return {
 				function(server_name)
 					require("lspconfig")[server_name].setup({
 						capabilities = capabilities,
-						on_attach = function(_, bufnr)
+						on_attach = function(client, bufnr)
 							local buf_set_keymap = vim.api.nvim_buf_set_keymap
 							local opts = { noremap = true, silent = true }
 
@@ -71,10 +74,13 @@ return {
 							buf_set_keymap(bufnr, "n", "<space>rn", "<Cmd>lua vim.lsp.buf.rename()<CR>", opts)
 							buf_set_keymap(bufnr, "n", "gr", "<Cmd>lua vim.lsp.buf.references()<CR>", opts)
 							buf_set_keymap(bufnr, "n", "<space>e", "<Cmd>lua vim.diagnostic.open_float()<CR>", opts)
-							buf_set_keymap(bufnr, "n", "[d", "<Cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
-							buf_set_keymap(bufnr, "n", "]d", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
+							buf_set_keymap(bufnr, "n", "<æ", "<Cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
+							buf_set_keymap(bufnr, "n", "<ð", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
 							buf_set_keymap(bufnr, "n", "<space>q", "<Cmd>lua vim.diagnostic.setloclist()<CR>", opts)
 							buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+
+							-- Debugging: Print buffer number and client name
+							print("LSP attached to buffer", bufnr, "with client", client.name)
 						end,
 					})
 				end,
@@ -94,6 +100,7 @@ return {
 					vim.g.zig_fmt_parse_errors = 0
 					vim.g.zig_fmt_autosave = 0
 				end,
+
 				["lua_ls"] = function()
 					local lspconfig = require("lspconfig")
 					lspconfig.lua_ls.setup({
@@ -107,6 +114,43 @@ return {
 							},
 						},
 					})
+				end,
+			},
+		})
+
+		-- Setup Flutter Tools
+		require("flutter-tools").setup({
+			lsp = {
+				capabilities = capabilities,
+				on_attach = function(client, bufnr)
+					local buf_set_keymap = vim.api.nvim_buf_set_keymap
+					local opts = { noremap = true, silent = true }
+
+					-- Key mappings for Dart/Flutter
+					buf_set_keymap(bufnr, "n", "gd", "<Cmd>lua vim.lsp.buf.definition()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "K", "<Cmd>lua vim.lsp.buf.hover()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "gi", "<Cmd>lua vim.lsp.buf.implementation()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<C-k>", "<Cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<space>wa", "<Cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<space>wr", "<Cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", opts)
+					buf_set_keymap(
+						bufnr,
+						"n",
+						"<space>wl",
+						"<Cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>",
+						opts
+					)
+					buf_set_keymap(bufnr, "n", "<space>D", "<Cmd>lua vim.lsp.buf.type_definition()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<space>rn", "<Cmd>lua vim.lsp.buf.rename()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "gr", "<Cmd>lua vim.lsp.buf.references()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<space>e", "<Cmd>lua vim.diagnostic.open_float()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<æ", "<Cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<ð", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<space>q", "<Cmd>lua vim.diagnostic.setloclist()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+
+					-- Debugging: Print buffer number and client name
+					print("LSP attached to buffer", bufnr, "with client", client.name)
 				end,
 			},
 		})
