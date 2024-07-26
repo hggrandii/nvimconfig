@@ -78,6 +78,7 @@ return {
 							buf_set_keymap(bufnr, "n", "<ð", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
 							buf_set_keymap(bufnr, "n", "<space>q", "<Cmd>lua vim.diagnostic.setloclist()<CR>", opts)
 							buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+							buf_set_keymap(bufnr, "n", "<leader>vca", "<Cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 
 							-- Debugging: Print buffer number and client name
 							print("LSP attached to buffer", bufnr, "with client", client.name)
@@ -97,6 +98,7 @@ return {
 							},
 						},
 					})
+					-- Ensure these settings are correctly set
 					vim.g.zig_fmt_parse_errors = 0
 					vim.g.zig_fmt_autosave = 0
 				end,
@@ -148,6 +150,7 @@ return {
 					buf_set_keymap(bufnr, "n", "<ð", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
 					buf_set_keymap(bufnr, "n", "<space>q", "<Cmd>lua vim.diagnostic.setloclist()<CR>", opts)
 					buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+					buf_set_keymap(bufnr, "n", "<leader>vca", "<Cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 
 					-- Debugging: Print buffer number and client name
 					print("LSP attached to buffer", bufnr, "with client", client.name)
