@@ -5,12 +5,14 @@ return {
 		"nvim-lua/plenary.nvim",
 		{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
 		"nvim-tree/nvim-web-devicons",
-		"ThePrimeagen/harpoon", -- Add harpoon as a dependency
+		"ThePrimeagen/harpoon",
 	},
 	config = function()
 		local telescope = require("telescope")
 		local actions = require("telescope.actions")
+		local state = require("telescope.actions.state")
 		local harpoon = require("harpoon")
+		local mark = require("harpoon.mark")
 		local conf = require("telescope.config").values
 
 		harpoon.setup()
@@ -22,6 +24,20 @@ return {
 				table.insert(file_paths, mark.filename)
 			end
 
+			local function refresh_picker(current_picker)
+				local updated_marks = harpoon.get_mark_config().marks
+				local updated_file_paths = {}
+				for _, updated_mark in ipairs(updated_marks) do
+					table.insert(updated_file_paths, updated_mark.filename)
+				end
+				current_picker:refresh(
+					require("telescope.finders").new_table({
+						results = updated_file_paths,
+					}),
+					{ reset_prompt = true }
+				)
+			end
+
 			require("telescope.pickers")
 				.new({}, {
 					prompt_title = "Harpoon",
@@ -30,6 +46,19 @@ return {
 					}),
 					previewer = conf.file_previewer({}),
 					sorter = conf.generic_sorter({}),
+					attach_mappings = function(prompt_bufnr, map)
+						map("i", "<C-d>", function()
+							local selected_entry = state.get_selected_entry()
+							local current_picker = state.get_current_picker(prompt_bufnr)
+
+							mark.rm_file(selected_entry.value)
+
+							refresh_picker(current_picker)
+
+							print("Removed from Harpoon: " .. selected_entry.value)
+						end)
+						return true
+					end,
 				})
 				:find()
 		end
@@ -58,6 +87,6 @@ return {
 		keymap.set("n", "<leader>ft", "<cmd>TodoTelescope<cr>", { desc = "Find todos" })
 		keymap.set("n", "<C-e>", function()
 			toggle_telescope()
-		end, { desc = "Open harpoon window" })
+		end, { desc = "Open Harpoon window" })
 	end,
 }
