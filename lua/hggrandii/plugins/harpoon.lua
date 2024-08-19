@@ -41,17 +41,5 @@ return {
 		keymap.set("n", "<C-S-N>", function()
 			ui.nav_next()
 		end, { desc = "Navigate to next Harpoon buffer" })
-
-		keymap.set("n", "<C-d>", function()
-			local current_buf = vim.api.nvim_get_current_buf()
-			local current_file = vim.api.nvim_buf_get_name(current_buf)
-
-			mark.rm_file(current_file)
-
-			ui.toggle_quick_menu()
-			ui.toggle_quick_menu()
-
-			print("Removed from Harpoon: " .. current_file)
-		end, { desc = "Remove the current file from Harpoon" })
 	end,
 }
