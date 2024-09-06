@@ -18,7 +18,7 @@ return {
 			ui.toggle_quick_menu()
 		end, { desc = "Toggle Harpoon Quick Menu" })
 
-		keymap.set("n", "<C-h>", function()
+		keymap.set("n", "<C-m>", function()
 			ui.nav_file(1)
 		end, { desc = "Navigate to Harpoon file 1" })
 
