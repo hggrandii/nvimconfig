@@ -27,10 +27,8 @@ return {
 			cmp_lsp.default_capabilities()
 		)
 
-		-- Fidget (LSP progress UI)
 		require("fidget").setup({})
 
-		-- Mason setup for managing LSP servers
 		require("mason").setup()
 		require("mason-lspconfig").setup({
 			ensure_installed = {
@@ -38,6 +36,7 @@ return {
 				"rust_analyzer",
 				"gopls",
 				"pyright",
+				"biome",
 			},
 		})
 
@@ -69,7 +68,6 @@ return {
 			buf_set_keymap(bufnr, "n", "<leader>vca", "<Cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 		end
 
-		-- Configure individual language servers
 		require("lspconfig").lua_ls.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
@@ -91,6 +89,10 @@ return {
 			on_attach = on_attach,
 		})
 
+		require("lspconfig").biome.setup({
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
 		require("lspconfig").gopls.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
@@ -99,9 +101,38 @@ return {
 		require("lspconfig").pyright.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
+			settings = {
+				python = {
+					analysis = {
+						autoSearchPaths = true,
+						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace",
+						typeCheckingMode = "basic",
+					},
+					venvPath = vim.fn.expand("~/.virtualenvs"),
+				},
+			},
+			before_init = function(_, config)
+				local venv_paths = {
+					vim.fn.getcwd() .. "/.venv/bin/python",
+					vim.fn.getcwd() .. "/venv/bin/python",
+					vim.fn.getcwd() .. "/env/bin/python",
+				}
+				for _, path in ipairs(venv_paths) do
+					if vim.fn.filereadable(path) == 1 then
+						config.settings.python.pythonPath = path
+						break
+					end
+				end
+				if not config.settings.python.pythonPath then
+					config.settings.python.pythonPath = vim.fn.exepath("python3")
+						or vim.fn.exepath("python")
+						or "python"
+				end
+				print("Python path: " .. config.settings.python.pythonPath)
+			end,
 		})
 
-		-- Setup for Flutter tools
 		require("flutter-tools").setup({
 			lsp = {
 				capabilities = capabilities,
@@ -109,7 +140,6 @@ return {
 			},
 		})
 
-		-- Completion setup
 		cmp.setup({
 			snippet = {
 				expand = function(args)
@@ -130,10 +160,8 @@ return {
 			}),
 		})
 
-		-- Trouble.nvim for LSP diagnostics and navigation
 		require("trouble").setup({})
 
-		-- Diagnostic configuration
 		vim.diagnostic.config({
 			float = {
 				focusable = false,
@@ -143,6 +171,25 @@ return {
 				header = "",
 				prefix = "",
 			},
+			virtual_text = {
+				severity = { min = vim.diagnostic.severity.WARN },
+			},
+			signs = {
+				severity = { min = vim.diagnostic.severity.WARN },
+			},
+			underline = {
+				severity = { min = vim.diagnostic.severity.WARN },
+			},
+		})
+
+		vim.api.nvim_create_autocmd("FileType", {
+			pattern = "python",
+			callback = function()
+				vim.opt_local.expandtab = true
+				vim.opt_local.shiftwidth = 4
+				vim.opt_local.tabstop = 4
+				vim.opt_local.softtabstop = 4
+			end,
 		})
 	end,
 }
