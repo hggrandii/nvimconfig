@@ -64,7 +64,7 @@ return {
 			buf_set_keymap(bufnr, "n", "<", "<Cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
 			buf_set_keymap(bufnr, "n", ">", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
 			buf_set_keymap(bufnr, "n", "<space>q", "<Cmd>lua vim.diagnostic.setloclist()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.formatting()<CR>", opts)
+			buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
 			buf_set_keymap(bufnr, "n", "<leader>vca", "<Cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 		end
 
@@ -93,6 +93,7 @@ return {
 			capabilities = capabilities,
 			on_attach = on_attach,
 		})
+
 		require("lspconfig").gopls.setup({
 			capabilities = capabilities,
 			on_attach = on_attach,
@@ -106,29 +107,12 @@ return {
 					analysis = {
 						autoSearchPaths = true,
 						useLibraryCodeForTypes = true,
-						diagnosticMode = "workspace",
-						typeCheckingMode = "basic",
 					},
 					venvPath = vim.fn.expand("~/.virtualenvs"),
 				},
 			},
 			before_init = function(_, config)
-				local venv_paths = {
-					vim.fn.getcwd() .. "/.venv/bin/python",
-					vim.fn.getcwd() .. "/venv/bin/python",
-					vim.fn.getcwd() .. "/env/bin/python",
-				}
-				for _, path in ipairs(venv_paths) do
-					if vim.fn.filereadable(path) == 1 then
-						config.settings.python.pythonPath = path
-						break
-					end
-				end
-				if not config.settings.python.pythonPath then
-					config.settings.python.pythonPath = vim.fn.exepath("python3")
-						or vim.fn.exepath("python")
-						or "python"
-				end
+				config.settings.python.pythonPath = vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
 				print("Python path: " .. config.settings.python.pythonPath)
 			end,
 		})
@@ -167,7 +151,6 @@ return {
 				focusable = false,
 				style = "minimal",
 				border = "rounded",
-				source = "always",
 				header = "",
 				prefix = "",
 			},
