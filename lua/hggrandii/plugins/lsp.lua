@@ -15,6 +15,8 @@ return {
 		"akinsho/flutter-tools.nvim",
 		"nvim-lua/plenary.nvim",
 		"stevearc/dressing.nvim",
+		"mfussenegger/nvim-lint",
+		"mhartington/formatter.nvim",
 	},
 
 	config = function()
@@ -36,36 +38,47 @@ return {
 				"rust_analyzer",
 				"gopls",
 				"pyright",
+				"ruff_lsp",
 				"biome",
+				"zls",
 			},
 		})
 
+		local mason_registry = require("mason-registry")
+		local tools_to_install = { "mypy", "black", "ruff" }
+		for _, tool in ipairs(tools_to_install) do
+			if not mason_registry.is_installed(tool) then
+				vim.cmd("MasonInstall " .. tool)
+			end
+		end
+
 		local on_attach = function(client, bufnr)
-			local buf_set_keymap = vim.api.nvim_buf_set_keymap
+			local function buf_set_keymap(...)
+				vim.api.nvim_buf_set_keymap(bufnr, ...)
+			end
 			local opts = { noremap = true, silent = true }
 
-			buf_set_keymap(bufnr, "n", "gd", "<Cmd>lua vim.lsp.buf.definition()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "K", "<Cmd>lua vim.lsp.buf.hover()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "gi", "<Cmd>lua vim.lsp.buf.implementation()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<C-k>", "<Cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<space>wa", "<Cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<space>wr", "<Cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", opts)
+			buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
+			buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
+			buf_set_keymap("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", opts)
+			buf_set_keymap("n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
+			buf_set_keymap("n", "<space>wa", "<cmd>lua vim.lsp.buf.add_workspace_folder()<CR>", opts)
+			buf_set_keymap("n", "<space>wr", "<cmd>lua vim.lsp.buf.remove_workspace_folder()<CR>", opts)
 			buf_set_keymap(
-				bufnr,
 				"n",
 				"<space>wl",
-				"<Cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>",
+				"<cmd>lua print(vim.inspect(vim.lsp.buf.list_workspace_folders()))<CR>",
 				opts
 			)
-			buf_set_keymap(bufnr, "n", "<space>D", "<Cmd>lua vim.lsp.buf.type_definition()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<space>rn", "<Cmd>lua vim.lsp.buf.rename()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "gr", "<Cmd>lua vim.lsp.buf.references()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<leader>e", "<Cmd>lua vim.diagnostic.open_float()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<", "<Cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
-			buf_set_keymap(bufnr, "n", ">", "<Cmd>lua vim.diagnostic.goto_next()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<space>q", "<Cmd>lua vim.diagnostic.setloclist()<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<space>f", "<Cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
-			buf_set_keymap(bufnr, "n", "<leader>vca", "<Cmd>lua vim.lsp.buf.code_action()<CR>", opts)
+			buf_set_keymap("n", "<space>D", "<cmd>lua vim.lsp.buf.type_definition()<CR>", opts)
+			buf_set_keymap("n", "<space>rn", "<cmd>lua vim.lsp.buf.rename()<CR>", opts)
+			buf_set_keymap("n", "gr", "<cmd>lua vim.lsp.buf.references()<CR>", opts)
+			buf_set_keymap("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", opts)
+			-- buf_set_keymap("n", "<", "<cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
+			-- buf_set_keymap("n", ">", "<cmd>lua vim.diagnostic.goto_next()<CR>", opts)
+			buf_set_keymap("n", "<space>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
+			buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
+			buf_set_keymap("n", "<leader>vca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
 		end
 
 		require("lspconfig").lua_ls.setup({
@@ -105,16 +118,34 @@ return {
 			settings = {
 				python = {
 					analysis = {
+						typeCheckingMode = "basic",
 						autoSearchPaths = true,
 						useLibraryCodeForTypes = true,
+						diagnosticMode = "workspace",
 					},
-					venvPath = vim.fn.expand("~/.virtualenvs"),
 				},
 			},
 			before_init = function(_, config)
-				config.settings.python.pythonPath = vim.fn.exepath("python3") or vim.fn.exepath("python") or "python"
-				print("Python path: " .. config.settings.python.pythonPath)
+				local path = vim.fn.getcwd() .. "/.venv/bin/python"
+				if vim.fn.filereadable(path) == 1 then
+					config.settings.python.pythonPath = path
+				end
 			end,
+		})
+
+		require("lspconfig").ruff_lsp.setup({
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
+
+		require("lspconfig").zls.setup({
+			capabilities = capabilities,
+			on_attach = on_attach,
+		})
+
+		require("lspconfig").ts_ls.setup({
+			capabilities = capabilities,
+			on_attach = on_attach,
 		})
 
 		require("flutter-tools").setup({
@@ -163,6 +194,42 @@ return {
 			underline = {
 				severity = { min = vim.diagnostic.severity.WARN },
 			},
+		})
+
+		local prettier = function()
+			return {
+				exe = "prettier",
+				args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+				stdin = true,
+			}
+		end
+
+		require("lint").linters_by_ft = {
+			python = { "mypy" },
+		}
+
+		vim.api.nvim_create_autocmd({ "BufWritePost" }, {
+			callback = function()
+				require("lint").try_lint()
+			end,
+		})
+
+		require("formatter").setup({
+			filetype = {
+				python = {
+					function()
+						return {
+							exe = vim.fn.stdpath("data") .. "/mason/bin/black",
+							args = { "-" },
+							stdin = true,
+						}
+					end,
+				},
+			},
+		})
+		vim.api.nvim_create_autocmd("BufWritePost", {
+			pattern = "*.py",
+			command = "FormatWrite",
 		})
 
 		vim.api.nvim_create_autocmd("FileType", {
