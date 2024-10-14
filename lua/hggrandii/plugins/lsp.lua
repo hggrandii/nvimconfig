@@ -45,7 +45,7 @@ return {
     })
 
     local mason_registry = require("mason-registry")
-    local tools_to_install = { "ruff" } -- Removed mypy, kept ruff
+    local tools_to_install = { "ruff" }
     for _, tool in ipairs(tools_to_install) do
       if not mason_registry.is_installed(tool) then
         vim.cmd("MasonInstall " .. tool)
@@ -205,7 +205,7 @@ return {
     end
 
     require("lint").linters_by_ft = {
-      python = { "ruff" }, -- Changed from mypy to ruff
+      python = { "ruff" },
     }
 
     vim.api.nvim_create_autocmd({ "BufWritePost" }, {
@@ -227,6 +227,7 @@ return {
         },
       },
     })
+
     vim.api.nvim_create_autocmd("BufWritePost", {
       pattern = "*.py",
       command = "FormatWrite",
