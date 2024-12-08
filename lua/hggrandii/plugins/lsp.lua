@@ -114,7 +114,9 @@ return {
 
 		require("lspconfig").pyright.setup({
 			capabilities = capabilities,
-			on_attach = on_attach,
+			on_attach = function(client, bufnr)
+				client.server_capabilities.documentFormattingProvider = false
+			end,
 			settings = {
 				python = {
 					analysis = {
@@ -212,20 +214,6 @@ return {
 			callback = function()
 				require("lint").try_lint()
 			end,
-		})
-
-		require("formatter").setup({
-			filetype = {
-				python = {
-					function()
-						return {
-							exe = vim.fn.stdpath("data") .. "/mason/bin/black",
-							args = { "-" },
-							stdin = true,
-						}
-					end,
-				},
-			},
 		})
 
 		vim.api.nvim_create_autocmd("BufWritePost", {
