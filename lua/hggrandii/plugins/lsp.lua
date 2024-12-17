@@ -37,7 +37,8 @@ return {
 				"lua_ls",
 				"rust_analyzer",
 				"gopls",
-				"pyright",
+				-- "pyright",
+				-- "ruff_lsp",
 				"ruff",
 				"biome",
 				"zls",
@@ -117,27 +118,43 @@ return {
 			on_attach = on_attach,
 		})
 
+		-- require("lspconfig").pyright.setup({
+		-- 	capabilities = capabilities,
+		-- 	on_attach = function(client, bufnr)
+		-- 		client.server_capabilities.documentFormattingProvider = false
+		-- 	end,
+		-- 	settings = {
+		-- 		python = {
+		-- 			analysis = {
+		-- 				typeCheckingMode = "basic",
+		-- 				autoSearchPaths = true,
+		-- 				useLibraryCodeForTypes = true,
+		-- 				diagnosticMode = "workspace",
+		-- 			},
+		-- 		},
+		-- 	},
+		-- 	before_init = function(_, config)
+		-- 		local path = vim.fn.getcwd() .. "/.venv/bin/python"
+		-- 		if vim.fn.filereadable(path) == 1 then
+		-- 			config.settings.python.pythonPath = path
+		-- 		end
+		-- 	end,
+		-- })
+
 		require("lspconfig").pyright.setup({
 			capabilities = capabilities,
-			on_attach = function(client, bufnr)
-				client.server_capabilities.documentFormattingProvider = false
-			end,
+			on_attach = on_attach,
 			settings = {
 				python = {
 					analysis = {
-						typeCheckingMode = "basic",
-						autoSearchPaths = true,
-						useLibraryCodeForTypes = true,
-						diagnosticMode = "workspace",
+						diagnosticMode = "none",
+						typeCheckingMode = "off",
+
+						autoSearchPaths = false,
+						useLibraryCodeForTypes = false,
 					},
 				},
 			},
-			before_init = function(_, config)
-				local path = vim.fn.getcwd() .. "/.venv/bin/python"
-				if vim.fn.filereadable(path) == 1 then
-					config.settings.python.pythonPath = path
-				end
-			end,
 		})
 
 		require("lspconfig").ruff.setup({
