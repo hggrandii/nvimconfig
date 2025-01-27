@@ -31,15 +31,15 @@ opt.splitbelow = true
 opt.guicursor = "n-v-c:block-Cursor/lCursor,i:block-blinkon0-CursorInsert"
 
 vim.api.nvim_create_autocmd({ "InsertEnter" }, {
-	pattern = "*",
-	callback = function()
-		vim.fn.system('echo -e "\\033]12;#ff00ff\\007"')
-	end,
+  pattern = "*",
+  callback = function()
+    vim.fn.system('echo -e "\\033]12;#ff00ff\\007"')
+  end,
 })
 
 vim.api.nvim_create_autocmd({ "InsertLeave" }, {
-	pattern = "*",
-	callback = function()
-		vim.fn.system('echo -e "\\033]12;#ffffff\\007"')
-	end,
+  pattern = "*",
+  callback = function()
+    vim.fn.system('echo -e "\\033]12;#ffffff\\007"')
+  end,
 })

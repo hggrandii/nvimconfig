@@ -24,10 +24,17 @@ return {
         mojo = { "mojo_formatter" },
         zed = { "zed_formatter" },
         dart = { "dartfmt" },
+        zig = { "zigfmt" },
       },
       formatters = {
         black = {
           prepend_args = { "--fast", "--quiet" },
+          timeout_ms = 5000,
+        },
+        zigfmt = {
+          command = "zig",
+          args = { "fmt", "$FILENAME" },
+          stdin = false,
           timeout_ms = 5000,
         },
       },
