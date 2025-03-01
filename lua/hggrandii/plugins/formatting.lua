@@ -24,7 +24,6 @@ return {
         mojo = { "mojo_formatter" },
         zed = { "zed_formatter" },
         dart = { "dartfmt" },
-        zig = { "zigfmt" },
       },
       formatters = {
         black = {
