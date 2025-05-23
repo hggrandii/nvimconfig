@@ -20,6 +20,16 @@ return {
   },
 
   config = function()
+    vim.deprecate = function() end
+
+    local notify = vim.notify
+    vim.notify = function(msg, ...)
+      if msg and (msg:match("deprecated") or msg:match("WARNING")) then
+        return
+      end
+      return notify(msg, ...)
+    end
+
     local cmp = require("cmp")
     local cmp_lsp = require("cmp_nvim_lsp")
     local capabilities = vim.tbl_deep_extend(
@@ -37,8 +47,6 @@ return {
         "lua_ls",
         "rust_analyzer",
         "gopls",
-        -- "pyright",
-        -- "ruff_lsp",
         "ruff",
         "eslint",
         "zls",
@@ -54,18 +62,6 @@ return {
     end
 
     local on_attach = function(client, bufnr)
-      print("🔥 LSP ATTACHED: " .. client.name .. " to buffer " .. bufnr)
-
-      local function buf_set_keymap(...)
-        vim.api.nvim_buf_set_keymap(bufnr, ...)
-      end
-      local opts = { noremap = true, silent = true }
-
-      print("🔧 Setting LSP keymaps for buffer " .. bufnr)
-
-
-
-
       local function buf_set_keymap(...)
         vim.api.nvim_buf_set_keymap(bufnr, ...)
       end
@@ -92,8 +88,6 @@ return {
         "<cmd>lua vim.defer_fn(function() vim.diagnostic.open_float(nil, { focusable = false }) end, 10)<CR>",
         opts
       )
-      -- buf_set_keymap("n", "<", "<cmd>lua vim.diagnostic.goto_prev()<CR>", opts)
-      -- buf_set_keymap("n", ">", "<cmd>lua vim.diagnostic.goto_next()<CR>", opts)
       buf_set_keymap("n", "<space>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
       buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
       buf_set_keymap("n", "<leader>vca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
@@ -140,29 +134,6 @@ return {
       on_attach = on_attach,
     })
 
-    -- require("lspconfig").pyright.setup({
-    -- 	capabilities = capabilities,
-    -- 	on_attach = function(client, bufnr)
-    -- 		client.server_capabilities.documentFormattingProvider = false
-    -- 	end,
-    -- 	settings = {
-    -- 		python = {
-    -- 			analysis = {
-    -- 				typeCheckingMode = "basic",
-    -- 				autoSearchPaths = true,
-    -- 				useLibraryCodeForTypes = true,
-    -- 				diagnosticMode = "workspace",
-    -- 			},
-    -- 		},
-    -- 	},
-    -- 	before_init = function(_, config)
-    -- 		local path = vim.fn.getcwd() .. "/.venv/bin/python"
-    -- 		if vim.fn.filereadable(path) == 1 then
-    -- 			config.settings.python.pythonPath = path
-    -- 		end
-    -- 	end,
-    -- })
-
     require("lspconfig").pyright.setup({
       capabilities = capabilities,
       on_attach = on_attach,
@@ -171,7 +142,6 @@ return {
           analysis = {
             diagnosticMode = "none",
             typeCheckingMode = "off",
-
             autoSearchPaths = false,
             useLibraryCodeForTypes = false,
           },
@@ -241,14 +211,6 @@ return {
         severity = { min = vim.diagnostic.severity.WARN },
       },
     })
-
-    local prettier = function()
-      return {
-        exe = "prettier",
-        args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-        stdin = true,
-      }
-    end
 
     require("lint").linters_by_ft = {
       python = { "ruff" },
