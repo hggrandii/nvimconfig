@@ -238,6 +238,27 @@ return {
       command = "FormatWrite",
     })
 
+
+    vim.api.nvim_create_autocmd("LspAttach", {
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if client and client.name == "gopls" then
+          vim.defer_fn(function()
+            local clients = vim.lsp.get_active_clients({ name = 'gopls' })
+            if #clients > 1 then
+              for _, c in ipairs(clients) do
+                if vim.tbl_isempty(c.config.settings or {}) then
+                  vim.lsp.stop_client(c.id)
+                  print("Auto-killed duplicate gopls client (ID: " .. c.id .. ")")
+                  break
+                end
+              end
+            end
+          end, 100)
+        end
+      end,
+    })
+
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "python",
       callback = function()
