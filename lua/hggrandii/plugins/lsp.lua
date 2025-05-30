@@ -42,16 +42,6 @@ return {
     require("fidget").setup({})
 
     require("mason").setup()
-    require("mason-lspconfig").setup({
-      ensure_installed = {
-        "lua_ls",
-        "rust_analyzer",
-        "gopls",
-        "ruff",
-        "eslint",
-        "zls",
-      },
-    })
 
     local mason_registry = require("mason-registry")
     local tools_to_install = { "ruff" }
@@ -67,6 +57,8 @@ return {
       end
       local opts = { noremap = true, silent = true }
 
+
+      -- buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
       buf_set_keymap("n", "gd", "<cmd>lua require('telescope.builtin').lsp_definitions()<CR>", opts)
       buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
       buf_set_keymap("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", opts)
@@ -93,75 +85,94 @@ return {
       buf_set_keymap("n", "<leader>vca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
     end
 
-    require("lspconfig").lua_ls.setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-      settings = {
-        Lua = {
-          runtime = { version = "LuaJIT" },
-          diagnostics = {
-            globals = { "vim" },
-          },
-          workspace = {
-            library = vim.api.nvim_get_runtime_file("", true),
-          },
-        },
+    require("mason-lspconfig").setup({
+      ensure_installed = {
+        "lua_ls",
+        "rust_analyzer",
+        "ruff",
+        "eslint",
+        "zls",
+        "pyright",
+        "ts_ls",
       },
-    })
+      handlers = {
+        function(server_name)
+          require("lspconfig")[server_name].setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+          })
+        end,
 
-    require("lspconfig").rust_analyzer.setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
+        ["lua_ls"] = function()
+          require("lspconfig").lua_ls.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              Lua = {
+                runtime = { version = "LuaJIT" },
+                diagnostics = {
+                  globals = { "vim" },
+                },
+                workspace = {
+                  library = vim.api.nvim_get_runtime_file("", true),
+                },
+              },
+            },
+          })
+        end,
 
-    require("lspconfig").eslint.setup({
-      capabilities = capabilities,
-      on_attach = function(client, bufnr)
-        on_attach(client, bufnr)
+        ["eslint"] = function()
+          require("lspconfig").eslint.setup({
+            capabilities = capabilities,
+            on_attach = function(client, bufnr)
+              on_attach(client, bufnr)
 
-        vim.api.nvim_create_autocmd("BufWritePre", {
-          buffer = bufnr,
-          command = "EslintFixAll",
-        })
-      end,
-      settings = {
-        workingDirectory = { mode = "auto" }
-      }
+              vim.api.nvim_create_autocmd("BufWritePre", {
+                buffer = bufnr,
+                command = "EslintFixAll",
+              })
+            end,
+            settings = {
+              workingDirectory = { mode = "auto" }
+            }
+          })
+        end,
+
+        ["pyright"] = function()
+          require("lspconfig").pyright.setup({
+            capabilities = capabilities,
+            on_attach = on_attach,
+            settings = {
+              python = {
+                analysis = {
+                  diagnosticMode = "none",
+                  typeCheckingMode = "off",
+                  autoSearchPaths = false,
+                  useLibraryCodeForTypes = false,
+                },
+              },
+            },
+          })
+        end,
+      },
     })
 
     require("lspconfig").gopls.setup({
       capabilities = capabilities,
       on_attach = on_attach,
-    })
-
-    require("lspconfig").pyright.setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
       settings = {
-        python = {
-          analysis = {
-            diagnosticMode = "none",
-            typeCheckingMode = "off",
-            autoSearchPaths = false,
-            useLibraryCodeForTypes = false,
+        gopls = {
+          analyses = {
+            unusedparams = true,
           },
+          staticcheck = true,
+          gofumpt = true,
+          usePlaceholders = true,
+          completeUnimported = true,
+          deepCompletion = true,
+          experimentalWorkspaceModule = true,
         },
       },
-    })
-
-    require("lspconfig").ruff.setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
-
-    require("lspconfig").zls.setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
-    })
-
-    require("lspconfig").ts_ls.setup({
-      capabilities = capabilities,
-      on_attach = on_attach,
     })
 
     require("flutter-tools").setup({
