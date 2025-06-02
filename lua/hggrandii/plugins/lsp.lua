@@ -58,6 +58,11 @@ return {
       local opts = { noremap = true, silent = true }
 
 
+      -- if client.server_capabilities.inlayHintProvider then
+      --   vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+      -- end
+
+
       -- buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
       buf_set_keymap("n", "gd", "<cmd>lua require('telescope.builtin').lsp_definitions()<CR>", opts)
       buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
@@ -83,12 +88,14 @@ return {
       buf_set_keymap("n", "<space>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts)
       buf_set_keymap("n", "<space>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
       buf_set_keymap("n", "<leader>vca", "<cmd>lua vim.lsp.buf.code_action()<CR>", opts)
+      -- buf_set_keymap("n", "<leader>th",
+      --   "<cmd>lua vim.lsp.inlay_hint.toggle(); print('Inlay hints: ' .. (vim.lsp.inlay_hint.is_enabled() and 'ON' or 'OFF'))<CR>",
+      --   opts)
     end
 
     require("mason-lspconfig").setup({
       ensure_installed = {
         "lua_ls",
-        "rust_analyzer",
         "ruff",
         "eslint",
         "zls",
@@ -138,6 +145,7 @@ return {
           })
         end,
 
+
         ["pyright"] = function()
           require("lspconfig").pyright.setup({
             capabilities = capabilities,
@@ -174,6 +182,51 @@ return {
         },
       },
     })
+
+    require("lspconfig").rust_analyzer.setup({
+      capabilities = capabilities,
+      on_attach = on_attach,
+      settings = {
+        ["rust-analyzer"] = {
+          checkOnSave = true,
+          inlayHints = { enable = true },
+          cargo = { loadOutDirsFromCheck = true, allFeatures = true },
+        },
+      },
+    })
+
+
+    -- require("lspconfig").rust_analyzer.setup({
+    --   capabilities = capabilities,
+    --   on_attach = on_attach,
+    --   settings = {
+    --     ["rust-analyzer"] = {
+    --       checkOnSave = true,
+    --       cargo = {
+    --         loadOutDirsFromCheck = true,
+    --         allFeatures = true,
+    --       },
+    --
+    --       inlayHints = {
+    --         enable = true,
+    --
+    --         typeHints = {
+    --           enable = true,
+    --           hideClosureInitialization = true,
+    --           hideNamedConstructor = true,
+    --         },
+    --
+    --         parameterHints = { enable = false },
+    --         chainingHints = { enable = false },
+    --         closureReturnTypeHints = { enable = false },
+    --         discriminantHints = { enable = false },
+    --         lifetimeElisionHints = { enable = false },
+    --
+    --         maxLength = 15,
+    --       },
+    --     },
+    --   },
+    -- })
 
     require("flutter-tools").setup({
       lsp = {
@@ -242,6 +295,7 @@ return {
     vim.api.nvim_create_autocmd("LspAttach", {
       callback = function(args)
         local client = vim.lsp.get_client_by_id(args.data.client_id)
+
         if client and client.name == "gopls" then
           vim.defer_fn(function()
             local clients = vim.lsp.get_active_clients({ name = 'gopls' })
@@ -256,8 +310,24 @@ return {
             end
           end, 100)
         end
+
+        if client and client.name == "rust_analyzer" then
+          vim.defer_fn(function()
+            local clients = vim.lsp.get_active_clients({ name = 'rust_analyzer' })
+            if #clients > 1 then
+              for _, c in ipairs(clients) do
+                if vim.tbl_isempty(c.config.settings or {}) then
+                  vim.lsp.stop_client(c.id)
+                  print("Auto-killed duplicate rust-analyzer client (ID: " .. c.id .. ")")
+                  break
+                end
+              end
+            end
+          end, 100)
+        end
       end,
     })
+
 
     vim.api.nvim_create_autocmd("FileType", {
       pattern = "python",
