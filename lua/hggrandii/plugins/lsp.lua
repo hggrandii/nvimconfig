@@ -251,6 +251,10 @@ return {
 				capabilities = capabilities,
 				on_attach = on_attach,
 			},
+			debugger = {
+				enabled = true,
+				run_via_dap = true,
+			},
 		})
 
 		cmp.setup({
