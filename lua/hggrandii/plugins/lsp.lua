@@ -62,7 +62,15 @@ return {
 			-- end
 
 			-- buf_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", opts)
-			buf_set_keymap("n", "gd", "<cmd>lua require('telescope.builtin').lsp_definitions()<CR>", opts)
+			-- buf_set_keymap("n", "gd", "<cmd>lua require('telescope.builtin').lsp_definitions()<CR>", opts)
+			vim.keymap.set("n", "gd", function()
+				local ok, tb = pcall(require, "telescope.builtin")
+				if ok then
+					tb.lsp_definitions()
+				else
+					vim.lsp.buf.definition()
+				end
+			end, { buffer = bufnr, silent = true, desc = "Go to Definition" })
 			buf_set_keymap("n", "K", "<cmd>lua vim.lsp.buf.hover()<CR>", opts)
 			buf_set_keymap("n", "gi", "<cmd>lua vim.lsp.buf.implementation()<CR>", opts)
 			buf_set_keymap("n", "<C-k>", "<cmd>lua vim.lsp.buf.signature_help()<CR>", opts)
@@ -332,6 +340,29 @@ return {
 					end, 100)
 				end
 
+				vim.api.nvim_create_autocmd("LspAttach", {
+					callback = function(args)
+						local client = vim.lsp.get_client_by_id(args.data.client_id)
+						if not client or client.name ~= "zls" then
+							return
+						end
+
+						vim.defer_fn(function()
+							local clients = vim.lsp.get_active_clients({ name = "zls" })
+							local home = vim.loop.os_homedir()
+							local std_pattern = home .. "/zig%-[%d%.]+/lib/"
+
+							for _, c in ipairs(clients) do
+								local root = (c.config and c.config.root_dir) or c.root_dir or ""
+								if root:match(std_pattern) then
+									vim.lsp.stop_client(c.id)
+									print("Auto-killed stdlib zls client (ID: " .. c.id .. ")")
+								end
+							end
+						end, 100)
+					end,
+				})
+
 				if client and client.name == "rust_analyzer" then
 					vim.defer_fn(function()
 						local clients = vim.lsp.get_active_clients({ name = "rust_analyzer" })
@@ -360,7 +391,7 @@ return {
 		})
 
 		vim.api.nvim_create_autocmd("FileType", {
-			pattern = { "c", "cpp" },
+			pattern = { "c", "cpp", "zig" },
 			callback = function()
 				vim.keymap.set(
 					"n",
